@@ -1,0 +1,34 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+    <button onclick="sendmessage();">send hello world</button>
+
+    <script>
+        let connection;
+        window.onload = function() {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/messager")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("SendMessage", function (message) {
+                console.log(message);
+            });
+
+            connection.start().then(function () {
+                console.log("connected");
+            });
+        };
+
+        function sendmessage() {
+            connection.invoke("ProduceMessage", "hello world").catch(err => console.error(err.toString()));
+        }
+    </script>
+</div>
