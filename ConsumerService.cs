@@ -22,7 +22,21 @@ namespace SignalR
         // https://docs.microsoft.com/en-us/aspnet/core/signalr/background-services?view=aspnetcore-2.2
         public ConsumerService(IConfiguration config, IHubContext<MessagerHub, IMessagerHub> messagerHubContext)
         {
+            // the config classes can be initialized directly from an IConfiguration instance:
             config.GetSection("Consumer").Bind(_consumerConfig);
+
+            // it doesn't make sense to allow some config to be specified in a
+            // settings file since they are tied closely to application logic.
+            // we should provide an extension method to allow these to be 
+            // checked for (but we don't currently).
+            if (_consumerConfig.EnablePartitionEof != null)
+            {
+                throw new Exception("shouldn't allow this to be set in config.");
+            }
+
+            // can set config values in application code too.
+            _consumerConfig.EnableAutoCommit = false;
+
             _topic = config.GetValue<string>("Topic");
             _messagerHubContext = messagerHubContext;
         }
@@ -59,7 +73,7 @@ namespace SignalR
 
             _pollLoopThread.Start();
 
-            return Task.FromResult<object>(null);
+            return Task.CompletedTask;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
